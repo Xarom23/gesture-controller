@@ -1,7 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
 from tkinter.constants import *
-from config import _bgcolor, _fgcolor
 from PIL import Image, ImageTk
 
 
