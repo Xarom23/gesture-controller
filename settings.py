@@ -1,6 +1,8 @@
+import json
 import tkinter as tk
 from tkinter.constants import *
 from PIL import Image, ImageTk
+from tkinter import messagebox
 
 
 class Settings:
@@ -12,12 +14,16 @@ class Settings:
         top.minsize(120, 1)
         top.resizable(0, 0)
         top.title("Configuración")
-        
-        self.left_hand_mode = "keyboard"
-        self.right_hand_mode = "mouse"
-        
-        self.left_blink_mode = "left_click"   # Can be "left_click" or "right_click"
-        self.right_blink_mode = "right_click" # Can be "left_click" or "right_click"
+        config = None
+        try:
+            with open('config.json', 'r') as f:
+                config = json.load(f)
+                self.left_hand_mode = config.get('left_hand_mode', 'keyboard')
+                self.right_hand_mode = config.get('right_hand_mode', 'mouse')
+                self.left_blink_mode = config.get('left_blink_mode', 'left_click')
+                self.right_blink_mode = config.get('right_blink_mode', 'right_click')
+        except Exception as e:
+            tk.messagebox.showerror("Error", f"Error al abrir el archivo de configuración: {str(e)}")
         
         self.main_frame = tk.Frame(top)
         self.main_frame.configure(background="#d9d9d9")
@@ -65,9 +71,9 @@ class Settings:
         self.left_click_icon = load_and_resize_image('assets/left_click.png')
         self.right_click_icon = load_and_resize_image('assets/right_click.png')
         self.mouse_movement_icon = load_and_resize_image('assets/mouse_movement.png')
-        
-        self.Message2 = tk.Label(self.frame_facial_group_left, image=self.left_click_icon)
-        self.Message2.image = self.left_click_icon
+
+        self.Message2 = tk.Label(self.frame_facial_group_left, image=self.left_click_icon if self.left_blink_mode == "left_click" else self.right_click_icon)
+        self.Message2.image = self.left_click_icon if self.left_blink_mode == "left_click" else self.right_click_icon
         self.Message2.grid(row=1, column=0)
         self.Message2.configure(background="#ffffff")
 
@@ -89,8 +95,8 @@ class Settings:
         self.Label4.grid(row=0, column=0, padx=5, pady=5)
         self.Label4.configure(text='Parpadeo derecho', justify='center', font="-family {Segoe UI} -weight bold")
 
-        self.Message3 = tk.Label(self.frame_facial_group_right, image=self.right_click_icon)
-        self.Message3.image = self.right_click_icon
+        self.Message3 = tk.Label(self.frame_facial_group_right, image=self.right_click_icon if self.right_blink_mode == "right_click" else self.left_click_icon)
+        self.Message3.image = self.right_click_icon if self.right_blink_mode == "right_click" else self.left_click_icon
         self.Message3.grid(row=1, column=0, padx=5, pady=5)
         self.Message3.configure(background="#ffffff")
 
@@ -110,8 +116,8 @@ class Settings:
         self.Label5.grid(row=0, column=0, padx=5, pady=5)
         self.Label5.configure(text='Mano izquierda', justify='center', font="-family {Segoe UI} -weight bold")
 
-        self.Message4 = tk.Label(self.frame_hand_group_left, image=self.keyboard_icon)
-        self.Message4.image = self.keyboard_icon
+        self.Message4 = tk.Label(self.frame_hand_group_left, image=self.keyboard_icon if self.left_hand_mode == "keyboard" else self.mouse_movement_icon)
+        self.Message4.image = self.keyboard_icon if self.left_hand_mode == "keyboard" else self.mouse_movement_icon
         self.Message4.grid(row=1, column=0)
         self.Message4.configure(background="#ffffff")
 
@@ -131,8 +137,8 @@ class Settings:
         self.Label6.grid(row=0, column=0, padx=5, pady=5)
         self.Label6.configure(text='Mano derecha', justify='center', font="-family {Segoe UI} -weight bold")
 
-        self.Message5 = tk.Label(self.frame_hand_group_right, image=self.mouse_movement_icon)
-        self.Message5.image = self.mouse_movement_icon
+        self.Message5 = tk.Label(self.frame_hand_group_right, image=self.mouse_movement_icon if self.right_hand_mode == "mouse" else self.keyboard_icon)
+        self.Message5.image = self.mouse_movement_icon if self.right_hand_mode == "mouse" else self.keyboard_icon
         self.Message5.grid(row=1, column=0, padx=5, pady=5)
         self.Message5.configure(background="#ffffff")
 
@@ -164,8 +170,6 @@ class Settings:
         self.Message3.configure(image=temp_image)
 
     def save_settings(self):
-        import json
-        
         config = {
         'left_hand_mode': self.left_hand_mode,
         'right_hand_mode': self.right_hand_mode,
