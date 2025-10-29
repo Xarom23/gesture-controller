@@ -5,9 +5,6 @@ from config import _bgcolor, _fgcolor
 
 class AboutPage:
     def __init__(self, top=None):
-        '''This class configures and populates the toplevel window.
-           top is the toplevel containing window.'''
-
         top.geometry("482x341+519+262")
         top.minsize(120, 1)
         top.maxsize(1540, 845)
