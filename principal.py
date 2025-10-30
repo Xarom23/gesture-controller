@@ -1,8 +1,3 @@
-#! /usr/bin/env python3
-#  -*- coding: utf-8 -*-
-#
-# Clase Principal - Ventana principal del sistema de control por gestos
-
 import tkinter as tk
 from tkinter.constants import *
 from config import _bgcolor, _fgcolor
@@ -13,10 +8,7 @@ from camera_handler import CameraHandler
 
 class Principal:
     def __init__(self, top=None):
-        '''This class configures and populates the toplevel window.
-           top is the toplevel containing window.'''
-
-        top.geometry("600x351+410+253")  # Start with expanded view
+        top.geometry("600x351+410+253")
         top.minsize(120, 1)
         top.maxsize(1540, 825)
         top.resizable(0, 0)
@@ -26,10 +18,10 @@ class Principal:
         top.configure(highlightcolor="#000000")
 
         self.top = top
-        self.checkViewVideo = tk.StringVar(value='1')  # Activado por defecto
+        self.checkViewVideo = tk.StringVar(value='1')
         self.checkViewLandmarks = tk.StringVar()
-        self.acerca_de_window = None  # Referencia a la ventana "Acerca de"
-        self.configuracion_window = None  # Referencia a la ventana "Configuración"
+        self.acerca_de_window = None
+        self.configuracion_window = None
 
         self.menubar = tk.Menu(top, font="TkMenuFont", bg=_bgcolor, fg=_fgcolor)
         top.configure(menu=self.menubar)
@@ -59,7 +51,8 @@ class Principal:
         self.sub_menu1.add_command(compound='left', font="TkMenuFont",
                                    label='Configuración', command=self.open_settings)
         self.sub_menu1.add_separator()
-        # Obtener el estado inicial del control gestual
+
+        
         from config import gesture_control_enabled
         initial_label = 'Desactivar control gestual' if gesture_control_enabled else 'Activar control gestual'
         self.sub_menu1.add_command(compound='left', font="TkMenuFont",
