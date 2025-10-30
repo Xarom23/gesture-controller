@@ -1,8 +1,3 @@
-#! /usr/bin/env python3
-#  -*- coding: utf-8 -*-
-#
-# Camera Handler - Clase para capturar video de la cámara y mostrarlo en un canvas
-
 import cv2
 from PIL import Image, ImageTk
 import tkinter as tk
@@ -13,26 +8,16 @@ from gesture_controller import GestureController
 
 class CameraHandler:
     def __init__(self, canvas, camera_index=0, width=600, height=351):
-        """
-        Inicializa el manejador de cámara
-
-        Args:
-            canvas: El widget Canvas de tkinter donde se mostrará el video
-            camera_index: Índice de la cámara (0 por defecto para la cámara principal)
-            width: Ancho del frame
-            height: Alto del frame
-        """
         self.canvas = canvas
         self.camera_index = camera_index
         self.width = width
         self.height = height
         self.cap = None
         self.is_running = False
-        self.show_video = True  # Controla si se muestra el video en el canvas
-        self.show_landmarks = False  # Controla si se dibujan los landmarks
-        self.delay = 15  # Delay en ms entre frames (aproximadamente 60 FPS)
+        self.show_video = True
+        self.show_landmarks = False
+        self.delay = 15
 
-        # Inicializar el detector de landmarks
         self.landmark_detector = LandmarkDetector(
             detect_hands=True,
             detect_face=True,
@@ -108,7 +93,10 @@ class CameraHandler:
                     # Procesar gestos de manos si hay detecciones y el control gestual está activado
                     from config import gesture_control_enabled
                     if detection_results.hands and gesture_control_enabled:
-                        self.gesture_controller.process_hand_gestures(detection_results.hands)
+                        self.gesture_controller.process_gestures(
+                            hand_results=detection_results.hands,
+                            face_landmarks=detection_results.face
+                        )
 
                     # Detectar landmarks si está activado
                     if self.show_landmarks:
