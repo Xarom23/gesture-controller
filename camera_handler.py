@@ -1,3 +1,16 @@
+"""
+Camera Handler Module
+----------------------
+Manages camera capture, video display, and integration with gesture detection.
+Handles video frame processing, landmark detection, and gesture control coordination.
+
+Key responsibilities:
+- Camera initialization and video capture
+- Frame processing and display on Tkinter canvas
+- Landmark detection coordination
+- Gesture processing integration
+"""
+
 import cv2
 from PIL import Image, ImageTk
 import tkinter as tk
@@ -8,6 +21,14 @@ from gesture_controller import GestureController
 
 class CameraHandler:
     def __init__(self, canvas, camera_index=0, width=600, height=351):
+        """Initialize the camera handler
+
+        Args:
+            canvas: Tkinter canvas widget for video display
+            camera_index: Index of the camera to use (default: 0)
+            width: Width of the video display (default: 600)
+            height: Height of the video display (default: 351)
+        """
         self.canvas = canvas
         self.camera_index = camera_index
         self.width = width
@@ -26,21 +47,21 @@ class CameraHandler:
             min_tracking_confidence=0.5
         )
 
-        # Utilidades de dibujo de MediaPipe
+        # MediaPipe drawing utilities
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_drawing_styles = mp.solutions.drawing_styles
         self.mp_hands = mp.solutions.hands
         self.mp_face_mesh = mp.solutions.face_mesh
-        
-        # Inicializar el controlador de gestos
+
+        # Initialize gesture controller
         self.gesture_controller = GestureController()
 
     def start(self):
-        """Inicia la captura de video de la cámara"""
+        """Start camera video capture"""
         if not self.is_running:
             self.cap = cv2.VideoCapture(self.camera_index)
 
-            # Configurar resolución de la cámara
+            # Set camera resolution
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
@@ -51,46 +72,44 @@ class CameraHandler:
                 raise Exception(f"No se pudo abrir la cámara {self.camera_index}")
 
     def stop(self):
-        """Detiene la captura de video y libera la cámara"""
+        """Stop video capture and release camera"""
         self.is_running = False
         if self.cap is not None:
             self.cap.release()
             self.cap = None
 
     def set_show_video(self, show):
-        """
-        Controla si se debe mostrar el video en el canvas
+        """Control whether to display video on canvas
 
         Args:
-            show: True para mostrar el video, False para no actualizar el canvas
+            show: True to show video, False to stop canvas updates
         """
         self.show_video = show
 
     def set_show_landmarks(self, show):
-        """
-        Controla si se deben dibujar los landmarks en el video
+        """Control whether to draw landmarks on video
 
         Args:
-            show: True para mostrar los landmarks, False para ocultarlos
+            show: True to show landmarks, False to hide them
         """
         self.show_landmarks = show
 
     def _update_frame(self):
-        """Método privado que actualiza el frame en el canvas"""
+        """Private method that updates the frame on canvas"""
         if self.is_running and self.cap is not None:
-            # Solo capturar y mostrar el frame si show_video está activado
+            # Only capture and display frame if show_video is enabled
             if self.show_video:
                 ret, frame = self.cap.read()
 
                 if ret:
                     frame = cv2.flip(frame, 1)
-                    # Convertir de BGR (OpenCV) a RGB para MediaPipe
+                    # Convert from BGR (OpenCV) to RGB for MediaPipe
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    
-                    # Detectar landmarks de manos y rostro
+
+                    # Detect hand and face landmarks
                     detection_results = self.landmark_detector.detect_landmarks(frame_rgb)
 
-                    # Procesar gestos de manos si hay detecciones y el control gestual está activado
+                    # Process gestures if detections exist and gesture control is enabled
                     from config import gesture_control_enabled
                     if (detection_results.hands or detection_results.face) and gesture_control_enabled:
                         self.gesture_controller.process_gestures(
@@ -98,11 +117,11 @@ class CameraHandler:
                             face_landmarks=detection_results.face
                         )
 
-                    # Detectar landmarks si está activado
+                    # Draw landmarks if enabled
                     if self.show_landmarks:
-                        # Dibujar landmarks de manos
+                        # Draw hand landmarks
                         if detection_results.hands and detection_results.hands.landmarks:
-                            for hand_side, hand_landmarks in detection_results.hands.landmarks.items():
+                            for hand_landmarks in detection_results.hands.landmarks.values():
                                 self.mp_drawing.draw_landmarks(
                                     frame_rgb,
                                     hand_landmarks,
@@ -111,38 +130,35 @@ class CameraHandler:
                                     self.mp_drawing_styles.get_default_hand_connections_style()
                                 )
 
-                        # Dibujar landmarks de rostro
+                        # Draw face landmarks
                         if detection_results.face and detection_results.face.landmarks:
                             self.mp_drawing.draw_landmarks(
                                 frame_rgb,
                                 detection_results.face.landmarks,
                                 self.mp_face_mesh.FACEMESH_TESSELATION,
                             )
-                                
-    
 
-                    # Redimensionar el frame si es necesario
+                    # Resize frame if necessary
                     frame_resized = cv2.resize(frame_rgb, (self.width, self.height))
 
-                    # Convertir a formato PIL Image
+                    # Convert to PIL Image format
                     img = Image.fromarray(frame_resized)
 
-                    # Convertir a PhotoImage para tkinter
+                    # Convert to PhotoImage for tkinter
                     self.photo = ImageTk.PhotoImage(image=img)
 
-                    # Limpiar el canvas y mostrar la nueva imagen
+                    # Clear canvas and display new image
                     self.canvas.delete("all")
                     self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
 
-            # Programar la próxima actualización (siempre, aunque no se muestre)
+            # Schedule next update (always, even if not displaying)
             self.canvas.after(self.delay, self._update_frame)
 
     def get_current_frame(self):
-        """
-        Obtiene el frame actual sin mostrarlo en el canvas
+        """Get current frame without displaying it on canvas
 
         Returns:
-            numpy.ndarray: Frame actual en formato BGR (OpenCV)
+            numpy.ndarray: Current frame in BGR format (OpenCV)
         """
         if self.cap is not None and self.cap.isOpened():
             ret, frame = self.cap.read()
@@ -151,11 +167,10 @@ class CameraHandler:
         return None
 
     def set_camera(self, camera_index):
-        """
-        Cambia la cámara activa
+        """Change the active camera
 
         Args:
-            camera_index: Índice de la nueva cámara
+            camera_index: Index of the new camera
         """
         was_running = self.is_running
         if was_running:
@@ -167,8 +182,7 @@ class CameraHandler:
             self.start()
 
     def __del__(self):
-        """Destructor para asegurar que la cámara se libere"""
+        """Destructor to ensure camera is released"""
         self.stop()
-        # Cerrar el detector de landmarks
         if hasattr(self, 'landmark_detector'):
             self.landmark_detector.close()

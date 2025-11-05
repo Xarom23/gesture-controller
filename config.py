@@ -1,11 +1,19 @@
-#! /usr/bin/env python3
-#  -*- coding: utf-8 -*-
-#
-# Archivo de configuración - Constantes de colores y estilos
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Configuration Module
+--------------------
+Global configuration file containing UI color constants and application settings.
 
-# Variable global para control gestual
+Constants:
+- gesture_control_enabled: Global flag to enable/disable gesture control
+- Color and style constants for UI theming
+"""
+
+# Global variable for gesture control
 gesture_control_enabled = True
 
+# UI color and style constants
 _bgcolor = '#d9d9d9'
 _fgcolor = '#000000'
 _tabfg1 = 'black'

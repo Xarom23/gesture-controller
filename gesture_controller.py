@@ -1,3 +1,20 @@
+"""
+Gesture Controller Module
+--------------------------
+Orchestrates gesture recognition and control actions.
+Integrates landmark detection with mouse/keyboard simulation and configuration management.
+
+Key responsibilities:
+- Process hand gestures for mouse/keyboard control
+- Process facial gestures for mouse clicks (blink detection)
+- Dynamic configuration loading from config.json
+- Coordinate between detection and simulation modules
+
+The controller maps gestures to actions based on user configuration:
+- Hand gestures -> Mouse movement or directional keyboard input
+- Eye blinks -> Left/right mouse clicks
+"""
+
 from landmark_detector import HandsResults, FaceResults
 from mouse_simulator import MouseSimulator
 from keyboard_simulator import KeyboardSimulator
@@ -7,8 +24,21 @@ import pyautogui
 import json
 import os
 
+
 class GestureController:
+    """Main gesture control coordinator
+
+    Processes detected landmarks and triggers appropriate control actions
+    based on user configuration.
+    """
     def __init__(self, movement_threshold=60, smoothing_factor=0.5, position_history_size=5):
+        """Initialize the gesture controller
+
+        Args:
+            movement_threshold (int): Minimum movement distance for direction detection
+            smoothing_factor (float): Smoothing factor for mouse movement
+            position_history_size (int): Number of positions to track for smoothing
+        """
         self.mouse_simulator = MouseSimulator(smoothing_factor, position_history_size)
         self.keyboard_simulator = KeyboardSimulator()
         self.trajectory_detector = TrajectoryDetector(movement_threshold)

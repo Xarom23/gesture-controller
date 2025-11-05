@@ -1,7 +1,20 @@
+"""
+Trajectory Detector Module
+---------------------------
+Detects directional movement trajectories from normalized coordinates.
+Used for gesture-based keyboard control (arrow keys).
+
+Key features:
+- Tracks position changes over time
+- Detects cardinal directions (up, down, left, right)
+- Configurable movement threshold
+"""
+
+
 class TrajectoryDetector:
     def __init__(self, movement_threshold=60):
         """Initialize the trajectory detector
-        
+
         Args:
             movement_threshold (int): Minimum distance to trigger directional detection
         """

@@ -1,3 +1,10 @@
+"""
+About Module
+-------------
+Provides the "About" dialog window displaying application information,
+version details, and developer credits.
+"""
+
 import tkinter as tk
 from tkinter.constants import *
 from config import _bgcolor, _fgcolor
@@ -5,6 +12,11 @@ from config import _bgcolor, _fgcolor
 
 class AboutPage:
     def __init__(self, top=None):
+        """Initialize the About window
+
+        Args:
+            top: Parent Tkinter window/Toplevel
+        """
         top.geometry("482x341+519+262")
         top.minsize(120, 1)
         top.maxsize(1540, 845)
@@ -18,9 +30,6 @@ class AboutPage:
 
         self.menubar = tk.Menu(top, font="TkMenuFont", bg=_bgcolor, fg=_fgcolor)
         top.configure(menu=self.menubar)
-
-        ########### start #######################
-        ########### end #######################
 
         self.Label1 = tk.Label(self.top)
         self.Label1.place(x=30, y=10, height=41, width=124)

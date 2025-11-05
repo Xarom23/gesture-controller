@@ -1,9 +1,22 @@
+"""
+Mouse Simulator Module
+-----------------------
+Provides mouse control simulation using PyAutoGUI.
+Handles cursor movement and mouse click events for gesture-based mouse control.
+
+Key features:
+- Cursor position control with normalized coordinates
+- Left and right click simulation
+- Movement smoothing support
+"""
+
 import pyautogui
+
 
 class MouseSimulator:
     def __init__(self, smoothing_factor=0.5, position_history_size=5):
         """Initialize the mouse simulator
-        
+
         Args:
             smoothing_factor (float): Factor for movement smoothing (0-1)
             position_history_size (int): Number of previous positions to store for smoothing

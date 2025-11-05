@@ -1,9 +1,30 @@
+"""
+Blink Detector Module
+---------------------
+Detects eye blinks using Eye Aspect Ratio (EAR) calculation from facial landmarks.
+Uses MediaPipe face mesh landmarks to determine if eyes are open or closed.
+
+Key features:
+- Individual left and right eye blink detection
+- EAR-based algorithm for reliable blink detection
+- Configurable threshold for sensitivity adjustment
+
+Algorithm:
+The Eye Aspect Ratio (EAR) is calculated as:
+    EAR = (vertical_dist_1 + vertical_dist_2) / (2 * horizontal_dist)
+
+When the eye is open, EAR is relatively constant.
+When blinking, EAR drops significantly below the threshold.
+"""
+
 from landmark_detector import FaceResults
 
+
 class BlinkDetector:
+    """Detects eye blinks using Eye Aspect Ratio calculation"""
     def __init__(self, ear_threshold=0.07):
         """Initialize the blink detector
-        
+
         Args:
             ear_threshold (float): Eye Aspect Ratio threshold for blink detection
         """
