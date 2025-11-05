@@ -92,7 +92,7 @@ class CameraHandler:
 
                     # Procesar gestos de manos si hay detecciones y el control gestual está activado
                     from config import gesture_control_enabled
-                    if detection_results.hands and gesture_control_enabled:
+                    if (detection_results.hands or detection_results.face) and gesture_control_enabled:
                         self.gesture_controller.process_gestures(
                             hand_results=detection_results.hands,
                             face_landmarks=detection_results.face
@@ -113,14 +113,11 @@ class CameraHandler:
 
                         # Dibujar landmarks de rostro
                         if detection_results.face and detection_results.face.landmarks:
-                            for face_idx, face_landmarks in detection_results.face.landmarks.items():
-                                self.mp_drawing.draw_landmarks(
-                                    frame_rgb,
-                                    face_landmarks,
-                                    self.mp_face_mesh.FACEMESH_TESSELATION,
-                                    landmark_drawing_spec=None,
-                                    connection_drawing_spec=self.mp_drawing_styles.get_default_face_mesh_tesselation_style()
-                                )
+                            self.mp_drawing.draw_landmarks(
+                                frame_rgb,
+                                detection_results.face.landmarks,
+                                self.mp_face_mesh.FACEMESH_TESSELATION,
+                            )
                                 
     
 
