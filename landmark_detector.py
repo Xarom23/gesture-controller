@@ -63,11 +63,8 @@ class LandmarkDetector:
 
         if self.face_mesh:
             face_results = self.face_mesh.process(image)
-            face_landmarks_dict = {}
-            if face_results.multi_face_landmarks:
-                for idx, face_landmark in enumerate(face_results.multi_face_landmarks):
-                    face_landmarks_dict[idx] = face_landmark
-            face = FaceResults(face_landmarks_dict, self.mp_face)
+            if face_results.multi_face_landmarks and len(face_results.multi_face_landmarks) > 0:
+                face = FaceResults(face_results.multi_face_landmarks[0], self.mp_face)
 
         return DetectionsResults(hands, face)
 
