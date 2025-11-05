@@ -1,5 +1,7 @@
+from landmark_detector import FaceResults
+
 class BlinkDetector:
-    def __init__(self, ear_threshold=0.2):
+    def __init__(self, ear_threshold=0.07):
         """Initialize the blink detector
         
         Args:
@@ -7,31 +9,56 @@ class BlinkDetector:
         """
         self.ear_threshold = ear_threshold
         
-    def detect_left_eye_blink(self, face_landmarks, mp_face_mesh) -> bool:
+    def detect_left_eye_blink(self, face_landmarks: FaceResults) -> bool:
         """Detect if the left eye is blinking using Eye Aspect Ratio (EAR)
-        
+
         Args:
             face_landmarks: MediaPipe face landmarks
-            mp_face_mesh: MediaPipe face mesh solution instance
-            
+
         Returns:
             bool: True if left eye is blinking, False otherwise
         """
         if not face_landmarks:
             return False
-            
+
         # Left eye indices in MediaPipe Face Mesh
         LEFT_EYE_INDICES = [
             362, 382, 381, 380, 374, 373, 390,  # Upper eyelid
             463, 398, 384, 385, 386, 387, 388,  # Lower eyelid
         ]
-        
+
         # Get left eye landmarks
-        left_eye_landmarks = [face_landmarks.landmark[idx] for idx in LEFT_EYE_INDICES]
-        
+        left_eye_landmarks = [face_landmarks.landmarks.landmark[idx] for idx in LEFT_EYE_INDICES]
+
         # Calculate Eye Aspect Ratio (EAR)
         ear = self._calculate_ear(left_eye_landmarks)
-        
+
+        # Return True if eye is closed (EAR below threshold)
+        return ear < self.ear_threshold
+
+    def detect_right_eye_blink(self, face_landmarks: FaceResults) -> bool:
+        """Detect if the right eye is blinking using Eye Aspect Ratio (EAR)
+
+        Args:
+            face_landmarks: MediaPipe face landmarks
+        Returns:
+            bool: True if right eye is blinking, False otherwise
+        """
+        if not face_landmarks:
+            return False
+
+        # Right eye indices in MediaPipe Face Mesh
+        RIGHT_EYE_INDICES = [
+            33, 160, 158, 133, 153, 144, 163,  # Upper eyelid
+            263, 249, 390, 373, 374, 380, 381,  # Lower eyelid
+        ]
+
+        # Get right eye landmarks
+        right_eye_landmarks = [face_landmarks.landmarks.landmark[idx] for idx in RIGHT_EYE_INDICES]
+
+        # Calculate Eye Aspect Ratio (EAR)
+        ear = self._calculate_ear(right_eye_landmarks)
+
         # Return True if eye is closed (EAR below threshold)
         return ear < self.ear_threshold
         
