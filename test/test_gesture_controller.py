@@ -191,6 +191,12 @@ class TestGestureController(unittest.TestCase):
             self.controller._check_config_changes()
             mock_load.assert_called_once()
 
+    @patch('gesture_controller.os.path.getmtime', side_effect=FileNotFoundError)
+    def test_check_config_changes_file_not_found(self, mock_getmtime):
+        """Test config change detection when file is not found"""
+        # Should not raise an exception
+        self.controller._check_config_changes()
+
     @patch('gesture_controller.os.path.getmtime')
     def test_process_gestures_left_blink_right_click_mode(self, mock_getmtime):
         """Test left eye blink with right_click mode"""
