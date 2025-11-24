@@ -136,6 +136,8 @@ class CameraHandler:
                                 frame_rgb,
                                 detection_results.face.landmarks,
                                 self.mp_face_mesh.FACEMESH_TESSELATION,
+                                self.mp_drawing.DrawingSpec(color=(0, 255, 255), thickness=1, circle_radius=1),
+                                self.mp_drawing.DrawingSpec(color=(255, 0, 255), thickness=1)
                             )
 
                     # Resize frame if necessary
