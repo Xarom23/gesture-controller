@@ -24,49 +24,53 @@ class TestBlinkDetectorIntegration(unittest.TestCase):
 
     def test_blink_detection_with_threshold_variations(self):
         """Test blink detector works with different thresholds"""
-        # Test with default threshold
+        # Test with default threshold (now 0.40)
         detector_default = BlinkDetector()
-        self.assertEqual(detector_default.ear_threshold, 0.07)
+        self.assertEqual(detector_default.ear_threshold, 0.40)
 
         # Test with custom threshold
-        detector_custom = BlinkDetector(ear_threshold=0.10)
-        self.assertEqual(detector_custom.ear_threshold, 0.10)
+        detector_custom = BlinkDetector(ear_threshold=0.35)
+        self.assertEqual(detector_custom.ear_threshold, 0.35)
 
         # Verify internal EAR calculation works
-        # Create mock eye landmarks
+        # Create mock landmarks object with the new algorithm structure
         class MockLandmark:
-            def __init__(self, x, y):
+            def __init__(self, x, y, z=0.0):
                 self.x = x
                 self.y = y
+                self.z = z
 
-        # Normal open eye (larger vertical distances)
-        open_eye = [
-            MockLandmark(0.0, 0.5),   # Left corner
-            MockLandmark(0.2, 0.45),  # Upper lid
-            MockLandmark(0.4, 0.45),  # Upper lid
-            MockLandmark(0.5, 0.5),   # Right corner
-            MockLandmark(0.0, 0.5),   # (duplicate for simplicity)
-            MockLandmark(0.0, 0.5),   # (duplicate)
-            MockLandmark(0.5, 0.5),   # Right corner
-            MockLandmark(0.4, 0.55),  # Lower lid
-            MockLandmark(0.2, 0.55),  # Lower lid
-        ]
+        class MockLandmarks:
+            def __init__(self):
+                self.landmark = [MockLandmark(0, 0, 0) for _ in range(500)]
 
-        # Closed eye (smaller vertical distances)
-        closed_eye = [
-            MockLandmark(0.0, 0.5),   # Left corner
-            MockLandmark(0.2, 0.50),  # Upper lid (very close)
-            MockLandmark(0.4, 0.50),  # Upper lid
-            MockLandmark(0.5, 0.5),   # Right corner
-            MockLandmark(0.0, 0.5),
-            MockLandmark(0.0, 0.5),
-            MockLandmark(0.5, 0.5),   # Right corner
-            MockLandmark(0.4, 0.51),  # Lower lid (very close)
-            MockLandmark(0.2, 0.51),  # Lower lid
-        ]
+        # New algorithm uses 6 landmarks per eye:
+        # LEFT_EYE_EAR = [362, 380, 374, 263, 386, 385]
+        # Indices: [0]=horizontal_left, [1]=vertical_top1, [2]=vertical_top2,
+        #          [3]=horizontal_right, [4]=vertical_bottom2, [5]=vertical_bottom1
 
-        ear_open = detector_default._calculate_ear(open_eye)
-        ear_closed = detector_default._calculate_ear(closed_eye)
+        # Create open eye landmarks (larger vertical distances)
+        open_landmarks = MockLandmarks()
+        # Left eye open - horizontal distance 0.1, vertical distance 0.05 -> EAR ~0.5
+        open_landmarks.landmark[362] = MockLandmark(0.0, 0.5, 0)   # Horizontal left
+        open_landmarks.landmark[380] = MockLandmark(0.03, 0.45, 0)  # Vertical top 1
+        open_landmarks.landmark[374] = MockLandmark(0.07, 0.45, 0)  # Vertical top 2
+        open_landmarks.landmark[263] = MockLandmark(0.1, 0.5, 0)   # Horizontal right
+        open_landmarks.landmark[386] = MockLandmark(0.07, 0.55, 0)  # Vertical bottom 2
+        open_landmarks.landmark[385] = MockLandmark(0.03, 0.55, 0)  # Vertical bottom 1
+
+        # Create closed eye landmarks (smaller vertical distances)
+        closed_landmarks = MockLandmarks()
+        # Left eye closed - horizontal distance 0.1, vertical distance 0.01 -> EAR ~0.1
+        closed_landmarks.landmark[362] = MockLandmark(0.0, 0.5, 0)   # Horizontal left
+        closed_landmarks.landmark[380] = MockLandmark(0.03, 0.49, 0)  # Vertical top 1
+        closed_landmarks.landmark[374] = MockLandmark(0.07, 0.49, 0)  # Vertical top 2
+        closed_landmarks.landmark[263] = MockLandmark(0.1, 0.5, 0)   # Horizontal right
+        closed_landmarks.landmark[386] = MockLandmark(0.07, 0.51, 0)  # Vertical bottom 2
+        closed_landmarks.landmark[385] = MockLandmark(0.03, 0.51, 0)  # Vertical bottom 1
+
+        ear_open = detector_default._calculate_ear(detector_default.LEFT_EYE_EAR, open_landmarks)
+        ear_closed = detector_default._calculate_ear(detector_default.LEFT_EYE_EAR, closed_landmarks)
 
         # Verify EAR is higher when eye is open
         self.assertGreater(ear_open, ear_closed)
@@ -161,8 +165,8 @@ class TestComponentsInitializationIntegration(unittest.TestCase):
         self.assertIsNotNone(mouse_simulator)
         self.assertIsNotNone(keyboard_simulator)
 
-        # Verify default values
-        self.assertEqual(blink_detector.ear_threshold, 0.07)
+        # Verify default values (ear_threshold is now 0.40)
+        self.assertEqual(blink_detector.ear_threshold, 0.40)
         self.assertEqual(trajectory_detector.movement_threshold, 60)
 
     def test_landmark_detector_initialization(self):
@@ -222,7 +226,7 @@ class TestBlinkTrajectoryIntegration(unittest.TestCase):
 
     def test_blink_and_trajectory_work_independently(self):
         """Test blink and trajectory detectors don't interfere with each other"""
-        blink_detector = BlinkDetector(ear_threshold=0.07)
+        blink_detector = BlinkDetector(ear_threshold=0.40)
         trajectory_detector = TrajectoryDetector(movement_threshold=60)
         trajectory_detector.set_screen_size(1920, 1080)
 
@@ -241,13 +245,27 @@ class TestBlinkTrajectoryIntegration(unittest.TestCase):
         self.assertIn('up', directions)
 
         # Blink detector should still work independently
+        # Create mock landmarks with the new algorithm structure
         class MockLandmark:
-            def __init__(self, x, y):
+            def __init__(self, x, y, z=0.0):
                 self.x = x
                 self.y = y
+                self.z = z
 
-        closed_eye = [MockLandmark(i * 0.1, 0.5 + (0.01 if i % 2 else 0)) for i in range(9)]
-        ear = blink_detector._calculate_ear(closed_eye)
+        class MockLandmarks:
+            def __init__(self):
+                self.landmark = [MockLandmark(0, 0, 0) for _ in range(500)]
+
+        # Create closed eye landmarks using LEFT_EYE_EAR indices
+        closed_landmarks = MockLandmarks()
+        closed_landmarks.landmark[362] = MockLandmark(0.0, 0.5, 0)   # Horizontal left
+        closed_landmarks.landmark[380] = MockLandmark(0.03, 0.49, 0)  # Vertical top 1
+        closed_landmarks.landmark[374] = MockLandmark(0.07, 0.49, 0)  # Vertical top 2
+        closed_landmarks.landmark[263] = MockLandmark(0.1, 0.5, 0)   # Horizontal right
+        closed_landmarks.landmark[386] = MockLandmark(0.07, 0.51, 0)  # Vertical bottom 2
+        closed_landmarks.landmark[385] = MockLandmark(0.03, 0.51, 0)  # Vertical bottom 1
+
+        ear = blink_detector._calculate_ear(blink_detector.LEFT_EYE_EAR, closed_landmarks)
 
         # EAR should be calculable
         self.assertIsInstance(ear, float)
@@ -457,24 +475,29 @@ class TestEdgeCasesIntegration(unittest.TestCase):
         detector = BlinkDetector()
 
         class MockLandmark:
-            def __init__(self, x, y):
+            def __init__(self, x, y, z=0.0):
                 self.x = x
                 self.y = y
+                self.z = z
 
-        # Create landmarks with zero horizontal distance
-        zero_width_eye = [
-            MockLandmark(0.5, 0.4),
-            MockLandmark(0.5, 0.45),
-            MockLandmark(0.5, 0.45),
-            MockLandmark(0.5, 0.5),
-            MockLandmark(0.5, 0.5),
-            MockLandmark(0.5, 0.5),
-            MockLandmark(0.5, 0.5),
-            MockLandmark(0.5, 0.55),
-            MockLandmark(0.5, 0.55),
-        ]
+        class MockLandmarks:
+            def __init__(self):
+                self.landmark = [MockLandmark(0, 0, 0) for _ in range(500)]
 
-        ear = detector._calculate_ear(zero_width_eye)
+        # Create landmarks with zero horizontal distance using LEFT_EYE_EAR indices
+        # For zero horizontal distance, landmarks [0] and [3] must have identical (x, y, z)
+        # The new algorithm uses np.linalg.norm for 3D Euclidean distance
+        zero_landmarks = MockLandmarks()
+        # Horizontal corners at EXACTLY the same position
+        zero_landmarks.landmark[362] = MockLandmark(0.5, 0.5, 0)   # Horizontal left
+        zero_landmarks.landmark[263] = MockLandmark(0.5, 0.5, 0)   # Horizontal right (same!)
+        # Vertical landmarks (don't matter since h=0 returns 0)
+        zero_landmarks.landmark[380] = MockLandmark(0.5, 0.45, 0)  # Vertical top 1
+        zero_landmarks.landmark[374] = MockLandmark(0.5, 0.45, 0)  # Vertical top 2
+        zero_landmarks.landmark[386] = MockLandmark(0.5, 0.55, 0)  # Vertical bottom 2
+        zero_landmarks.landmark[385] = MockLandmark(0.5, 0.55, 0)  # Vertical bottom 1
+
+        ear = detector._calculate_ear(detector.LEFT_EYE_EAR, zero_landmarks)
 
         # Should return 0 to avoid division by zero
         self.assertEqual(ear, 0)
