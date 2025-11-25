@@ -36,19 +36,20 @@ This system was developed to explore the use of artificial intelligence and comp
 - Python 3.12 or higher
 
 ### Dependencies
+See [requirements.txt](requirements.txt) for full list:
 ```
-opencv-python==4.9.0.80
-opencv-contrib-python==4.11.0.86
-mediapipe==0.10.21
-pyautogui
-Pillow
+opencv-python>=4.9.0
+mediapipe>=0.10.21
+pyautogui>=0.9.54
+Pillow>=10.0.0
+numpy>=1.26.0
 tkinter (included with Python)
 ```
 
 ### Development Dependencies
 ```
-pytest==9.0.0
-pytest-cov==7.0.0
+pytest>=9.0.0
+pytest-cov>=7.0.0
 ```
 
 ## Installation
@@ -61,12 +62,12 @@ cd Codigo
 
 2. Install dependencies:
 ```bash
-pip install opencv-python opencv-contrib-python mediapipe pyautogui Pillow
+pip install -r requirements.txt
 ```
 
-3. Install development dependencies (optional):
+3. Or install manually:
 ```bash
-pip install pytest pytest-cov
+pip install opencv-python mediapipe pyautogui Pillow numpy
 ```
 
 ## Usage
@@ -140,8 +141,9 @@ Main system orchestrator:
 #### [blink_detector.py](blink_detector.py)
 Blink detection using Eye Aspect Ratio (EAR):
 - Independent left and right eye detection
-- Configurable threshold (default: 0.07)
-- Algorithm based on vertical and horizontal eye distances
+- Configurable threshold (default: 0.40)
+- Algorithm based on 3D Euclidean distance using numpy
+- Uses 6 key landmarks per eye for accurate detection
 
 #### [trajectory_detector.py](trajectory_detector.py)
 Trajectory detection for directional control:
@@ -230,6 +232,7 @@ Codigo/
 ├── about.py                 # "About" window
 ├── config.py                # Global configuration
 ├── config.json              # Configuration file
+├── requirements.txt         # Python dependencies
 ├── .coveragerc              # Coverage configuration
 ├── .gitignore               # Git ignored files
 └── README.md                # This file
@@ -260,10 +263,20 @@ Developed by Omar Luna Hernández as part of a thesis project exploring the use 
 The system uses the Eye Aspect Ratio (EAR) to detect blinks:
 
 ```
-EAR = (vertical_dist_1 + vertical_dist_2) / (2 * horizontal_dist)
+EAR = (||p2-p6|| + ||p3-p5||) / (2 * ||p1-p4||)
 ```
 
-When the eye is open, the EAR is relatively constant. During a blink, the EAR drops significantly below the threshold (default: 0.07).
+Where:
+- `p1, p4`: Horizontal corners of the eye
+- `p2, p3`: Upper eyelid vertical points
+- `p5, p6`: Lower eyelid vertical points
+- `|| ||`: Euclidean distance (3D using numpy)
+
+**Eye Landmarks Used:**
+- Right Eye: `[33, 159, 158, 133, 153, 145]`
+- Left Eye: `[362, 380, 374, 263, 386, 385]`
+
+When the eye is open, the EAR is relatively constant (~0.5-0.6). During a blink, the EAR drops significantly below the threshold (default: 0.40).
 
 ### Trajectory Detection
 
@@ -272,3 +285,19 @@ The system tracks the position of specific landmarks (e.g., index finger tip) an
 ### Real-time Configuration
 
 The application monitors the `config.json` file and automatically reloads the configuration when changes are detected, allowing adjustments without restarting the application.
+
+## Test Results
+
+The project maintains **100% code coverage** with 108 tests:
+
+| Module | Lines | Coverage | Tests |
+|--------|-------|----------|-------|
+| blink_detector.py | 28 | 100% | 9 |
+| trajectory_detector.py | 33 | 100% | 13 |
+| mouse_simulator.py | 15 | 100% | 8 |
+| keyboard_simulator.py | 5 | 100% | 6 |
+| landmark_detector.py | 48 | 100% | 17 |
+| gesture_controller.py | 79 | 100% | 16 |
+| camera_handler.py | 81 | 100% | 15 |
+| **Integration** | - | - | 15 |
+| **TOTAL** | **301** | **100%** | **108** |
